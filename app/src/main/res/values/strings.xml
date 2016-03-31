@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">知乎日报</string>
+    <string name="action_settings">设置选项</string>
+    <string name="drawer_open">Drawer Open</string>
+    <string name="drawer_close">Drawer Close</string>
+    <string name="prompt">再按一次退出</string>
+    <string name="action_share">Share</string>
+    <string name="offline">没有网络连接</string>
+</resources>
