@@ -1,6 +1,6 @@
 #知乎日报第三方客户端
 ##效果预览
-![](https://github.com/absfree/DailyZh/tree/master/demo/demo.gif)  
+![](https://github.com/absfree/DailyZh/blob/master/demo/demo.gif)  
 ##依赖的库
 [Gson](https://github.com/google/gson)
 ##源码结构
