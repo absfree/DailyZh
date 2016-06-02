@@ -1,7 +1,7 @@
 #知乎日报第三方客户端
 ##效果预览
 ##依赖的库
-[Gson](https://github.com/google/gson）
+[Gson](https://github.com/google/gson)
 ##源码结构
 |- dailyzhi
 
@@ -18,7 +18,9 @@
     |- MainNewsAdapter: 主界面列表适配器
     
     |- NewsItemAdapter: 具体主题下的新闻列表适配器
+  
   |- customView
+    
     |- Carousel: 主界面轮播控件
     
   |- fragment
