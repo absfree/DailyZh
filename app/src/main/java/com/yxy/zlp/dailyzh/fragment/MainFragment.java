@@ -15,7 +15,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.yxy.zlp.dailyzh.activity.MainActivity;
 import com.yxy.zlp.dailyzh.activity.NewsContentActivity;
 import com.yxy.zlp.dailyzh.adapter.MainNewsAdapter;
@@ -24,7 +23,9 @@ import com.yxy.zlp.dailyzh.model.LatestNews;
 import com.yxy.zlp.dailyzh.model.PrevNews;
 import com.yxy.zlp.dailyzh.model.Story;
 import com.yxy.zlp.dailyzh.util.Constants;
-import com.yxy.zlp.dailyzh.util.HttpUtils;
+import com.yxy.zlp.dailyzh.util.httpUtil.AsyncHttpUtils;
+import com.yxy.zlp.dailyzh.util.httpUtil.HttpUtils;
+import com.yxy.zlp.dailyzh.util.httpUtil.ResponseHandler;
 import com.yxy.zlp.dailyzhi.R;
 
 import java.text.ParseException;
@@ -32,10 +33,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
-import cz.msebera.android.httpclient.Header;
 
 public class MainFragment extends BaseFragment {
-    public static final String TAG = "BaseFragment";
+    public static final String TAG = "MainFragment";
     public static final String CURRENT_STORY = "currentStory";
 
     private SharedPreferences mSP;
@@ -54,7 +54,7 @@ public class MainFragment extends BaseFragment {
         View rootView = inflater.inflate(R.layout.main_news, container, false);
 
         mNewsList = (ListView) rootView.findViewById(R.id.news_list);
-        View listHeader = inflater.inflate(R.layout.carousel, mNewsList, false);
+        View listHeader = inflater.inflate(R.layout.carousel, null);
         mCarousel = (Carousel) listHeader.findViewById(R.id.carousel);
         mCarousel.setItemClickListener(new Carousel.OnNewsClickListener() {
             @Override
@@ -71,6 +71,25 @@ public class MainFragment extends BaseFragment {
         mNewsList.addHeaderView(listHeader);
         mMainNewsAdapter = new MainNewsAdapter(mActivity);
         mNewsList.setAdapter(mMainNewsAdapter);
+        mNewsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            @SuppressWarnings("deprecation")
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if (position != 0) {
+                    Story currentStory = (Story) parent.getAdapter().getItem(position);
+                    Intent intent = new Intent(mActivity, NewsContentActivity.class);
+                    intent.putExtra(MainFragment.CURRENT_STORY, currentStory);
+                    String newsRead = mSP.getString("newsRead", "");
+                    if (!newsRead.contains(currentStory.getId() + "")) {
+                        newsRead += currentStory.getId();
+                    }
+                    mSP.edit().putString("newsRead", newsRead);
+                    TextView newsTitle = (TextView) view.findViewById(R.id.news_title);
+                    newsTitle.setTextColor(getResources().getColor(R.color.read_textcolor));
+                    startActivity(intent);
+                }
+            }
+        });
         mNewsList.setOnScrollListener(new AbsListView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
@@ -84,30 +103,13 @@ public class MainFragment extends BaseFragment {
                             (view.getChildAt(firstVisibleItem).getTop() == 0);
                     ((MainActivity) mActivity).setRefreshEnable(refreshEnable);
                     if ((firstVisibleItem + visibleItemCount == totalItemCount) && (!isLoading)) {
-                        int prevDate = Integer.parseInt(mDate);
-                        loadPrevNews(Constants.PREV_NEWS + prevDate);
+                        //int prevDate = Integer.parseInt(mDate);
+                        loadPrevNews(Constants.PREV_NEWS + mDate);
                     }
                 }
             }
         });
 
-        mNewsList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            @SuppressWarnings("deprecation")
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Story currentStory = (Story) parent.getAdapter().getItem(position);
-                Intent intent = new Intent(mActivity, NewsContentActivity.class);
-                intent.putExtra(MainFragment.CURRENT_STORY, currentStory);
-                String newsRead = mSP.getString("newsRead", "");
-                if (!newsRead.contains(currentStory.getId() + "")) {
-                    newsRead += currentStory.getId();
-                }
-                mSP.edit().putString("newsRead", newsRead);
-                TextView newsTitle = (TextView) view.findViewById(R.id.news_title);
-                newsTitle.setTextColor(getResources().getColor(R.color.read_textcolor));
-                startActivity(intent);
-            }
-        });
         return rootView;
     }
 
@@ -115,15 +117,15 @@ public class MainFragment extends BaseFragment {
     protected void initContent(){
         isLoading = true;
         if (HttpUtils.isOnline(mActivity)) {
-            HttpUtils.getJson(Constants.LATEST_NEWS, new AsyncHttpResponseHandler() {
+            AsyncHttpUtils.get(Constants.LATEST_NEWS, new ResponseHandler() {
                 @Override
-                public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                    String jsonString = new String(bytes);
+                public void onSuccess(byte[] result) {
+                    String jsonString = new String(result);
                     parseLatestJson(jsonString);
                 }
 
                 @Override
-                public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+                public void onFailure() {
 
                 }
             });
@@ -153,15 +155,15 @@ public class MainFragment extends BaseFragment {
     private void loadPrevNews(String url) {
         isLoading = true;
         if (HttpUtils.isOnline(mActivity)) {
-            HttpUtils.getJson(url, new AsyncHttpResponseHandler() {
+            AsyncHttpUtils.get(url, new ResponseHandler() {
                 @Override
-                public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                    String jsonString = new String(bytes);
+                public void onSuccess(byte[] result) {
+                    String jsonString = new String(result);
                     parsePrevJson(jsonString);
                 }
 
                 @Override
-                public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+                public void onFailure() {
 
                 }
             });

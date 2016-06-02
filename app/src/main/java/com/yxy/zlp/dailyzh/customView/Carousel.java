@@ -13,9 +13,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
 import com.yxy.zlp.dailyzh.model.LatestNews;
+import com.yxy.zlp.dailyzh.util.imageLoader.FreeImageLoader;
 import com.yxy.zlp.dailyzhi.R;
 
 import java.util.ArrayList;
@@ -28,8 +27,7 @@ public class Carousel extends FrameLayout implements View.OnClickListener {
     private List<View> mViews;
     private List<ImageView> mDotsIV;
     private ViewPager mVP;
-    private ImageLoader mImageLoader;
-    private DisplayImageOptions mOptions;
+    private FreeImageLoader mFreeImageLoader;
     private boolean isAutoPlay;
     private int currentItem;
     private OnNewsClickListener mOnNewsClickListener;
@@ -53,13 +51,8 @@ public class Carousel extends FrameLayout implements View.OnClickListener {
         mTopStories = new ArrayList<>();
         mViews = new ArrayList<>();
         mDotsIV = new ArrayList<>();
-        mImageLoader = ImageLoader.getInstance();
-        mOptions = new DisplayImageOptions.Builder()
-                .cacheInMemory(true)
-                .cacheOnDisk(true)
-                .build();
+        mFreeImageLoader = FreeImageLoader.getInstance(mContext);
     }
-
 
     public void setTopStories(List<LatestNews.TopStory> topStories) {
         mTopStories = topStories;
@@ -73,6 +66,7 @@ public class Carousel extends FrameLayout implements View.OnClickListener {
         LinearLayout mDotsLayout = (LinearLayout) view.findViewById(R.id.dots);
 
         int len = mTopStories.size();
+        //initialize mDotsLayout and mDotsIV.
         for (int i = 0; i < len; i++) {
             ImageView dotIV = new ImageView(mContext);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
@@ -82,17 +76,16 @@ public class Carousel extends FrameLayout implements View.OnClickListener {
             mDotsLayout.addView(dotIV, params);
             mDotsIV.add(dotIV);
         }
-
+        //initialize mViews
         for (int i = 0; i < len; i++) {
-            View itemLayout = LayoutInflater.from(mContext).inflate(
+            View itemView = LayoutInflater.from(mContext).inflate(
                     R.layout.carousel_item, null);
-            ImageView titleIV = (ImageView) itemLayout.findViewById(R.id.title_img);
-            TextView title = (TextView) itemLayout.findViewById(R.id.title);
-            titleIV.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            mImageLoader.displayImage(mTopStories.get(i).getImage(), titleIV, mOptions);
+            ImageView titleIV = (ImageView) itemView.findViewById(R.id.title_img);
+            TextView title = (TextView) itemView.findViewById(R.id.title);
+            mFreeImageLoader.displayImage(mTopStories.get(i).getImage(), titleIV);
             title.setText(mTopStories.get(i).getTitle());
-            itemLayout.setOnClickListener(this);
-            mViews.add(itemLayout);
+            itemView.setOnClickListener(this);
+            mViews.add(itemView);
         }
 
         mVP.setAdapter(new TopPagerAdapter());

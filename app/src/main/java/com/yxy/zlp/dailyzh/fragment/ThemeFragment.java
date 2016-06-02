@@ -16,19 +16,17 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
 import com.yxy.zlp.dailyzh.activity.MainActivity;
 import com.yxy.zlp.dailyzh.activity.NewsContentActivity;
 import com.yxy.zlp.dailyzh.adapter.NewsItemAdapter;
 import com.yxy.zlp.dailyzh.model.Story;
 import com.yxy.zlp.dailyzh.model.ThemeNews;
+import com.yxy.zlp.dailyzh.util.httpUtil.AsyncHttpUtils;
 import com.yxy.zlp.dailyzh.util.Constants;
-import com.yxy.zlp.dailyzh.util.HttpUtils;
+import com.yxy.zlp.dailyzh.util.httpUtil.HttpUtils;
+import com.yxy.zlp.dailyzh.util.httpUtil.ResponseHandler;
+import com.yxy.zlp.dailyzh.util.imageLoader.FreeImageLoader;
 import com.yxy.zlp.dailyzhi.R;
-
-import cz.msebera.android.httpclient.Header;
 
 @SuppressLint("ValidFragment")
 public class ThemeFragment extends BaseFragment {
@@ -39,7 +37,7 @@ public class ThemeFragment extends BaseFragment {
     private String themeTitle;
     private ThemeNews news;
     private NewsItemAdapter mAdapter;
-    private ImageLoader mImageLoader = ImageLoader.getInstance();
+    private FreeImageLoader mFreeImageLoader;
     private SharedPreferences mSP;
 
     public ThemeFragment(String id, String title) {
@@ -52,6 +50,7 @@ public class ThemeFragment extends BaseFragment {
         mSP = PreferenceManager.getDefaultSharedPreferences(mActivity);
         ((MainActivity) mActivity).setToolbarTitle(themeTitle);
         View view = inflater.inflate(R.layout.theme_content, container, false);
+        mFreeImageLoader = FreeImageLoader.getInstance(mActivity);
         mNewsList = (ListView) view.findViewById(R.id.news_list);
         View listHeader = LayoutInflater.from(mActivity).inflate(
                 R.layout.theme_content_header, mNewsList, false);
@@ -101,15 +100,15 @@ public class ThemeFragment extends BaseFragment {
     protected void initContent() {
         super.initContent();
         if (HttpUtils.isOnline(mActivity)) {
-            HttpUtils.getJson(Constants.THEME + themeId, new AsyncHttpResponseHandler() {
+            AsyncHttpUtils.get(Constants.THEME + themeId, new ResponseHandler() {
                 @Override
-                public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                    String jsonString = new String(bytes);
+                public void onSuccess(byte[] result) {
+                    String jsonString = new String(result);
                     parseThemeJson(jsonString);
                 }
 
                 @Override
-                public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+                public void onFailure() {
 
                 }
             });
@@ -121,12 +120,8 @@ public class ThemeFragment extends BaseFragment {
     private void parseThemeJson(String jsonString) {
         Gson gson = new Gson();
         news = gson.fromJson(jsonString, ThemeNews.class);
-        DisplayImageOptions options = new DisplayImageOptions.Builder()
-                .cacheInMemory(true)
-                .cacheOnDisk(true)
-                .build();
         titleTV.setText(news.getDescription());
-        mImageLoader.displayImage(news.getImage(), titleIV, options);
+        mFreeImageLoader.displayImage(news.getImage(), titleIV);
         mAdapter = new NewsItemAdapter(mActivity, news.getStories());
         mNewsList.setAdapter(mAdapter);
     }

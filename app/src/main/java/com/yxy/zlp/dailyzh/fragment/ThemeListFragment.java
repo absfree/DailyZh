@@ -11,11 +11,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.loopj.android.http.AsyncHttpResponseHandler;
 import com.yxy.zlp.dailyzh.activity.MainActivity;
 import com.yxy.zlp.dailyzh.model.Theme;
+import com.yxy.zlp.dailyzh.util.httpUtil.AsyncHttpUtils;
 import com.yxy.zlp.dailyzh.util.Constants;
-import com.yxy.zlp.dailyzh.util.HttpUtils;
+import com.yxy.zlp.dailyzh.util.httpUtil.HttpUtils;
+import com.yxy.zlp.dailyzh.util.httpUtil.ResponseHandler;
 import com.yxy.zlp.dailyzhi.R;
 
 import org.json.JSONArray;
@@ -24,8 +25,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import cz.msebera.android.httpclient.Header;
 
 
 public class ThemeListFragment extends BaseFragment implements View.OnClickListener {
@@ -43,11 +42,7 @@ public class ThemeListFragment extends BaseFragment implements View.OnClickListe
     @Override
     protected View initView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.drawer_item_list, container, false);
-        mDrawerLayout = (LinearLayout) view.findViewById(R.id.drawer_layout);
-        loginTV = (TextView) view.findViewById(R.id.login);
-        collectTV = (TextView) view.findViewById(R.id.collect);
-        downloadTV = (TextView) view.findViewById(R.id.download);
-        downloadTV.setOnClickListener(this);
+        mDrawerLayout = (LinearLayout) view.findViewById(R.id.drawer_header_layout);
         indexTV = (TextView) view.findViewById(R.id.index);
         indexTV.setOnClickListener(this);
         mThemeList = (ListView) view.findViewById(R.id.item_list);
@@ -70,15 +65,15 @@ public class ThemeListFragment extends BaseFragment implements View.OnClickListe
         super.initContent();
         mThemes = new ArrayList<>();
         if (HttpUtils.isOnline(mActivity)) {
-           HttpUtils.getJson(Constants.THEME_LIST, new AsyncHttpResponseHandler() {
+           AsyncHttpUtils.get(Constants.THEME_LIST, new ResponseHandler() {
                @Override
-               public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                   String jsonString = new String(bytes);
+               public void onSuccess(byte[] result) {
+                   String jsonString = new String(result);
                    parseThemesJson(jsonString);
                }
 
                @Override
-               public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+               public void onFailure() {
 
                }
            });
@@ -127,7 +122,7 @@ public class ThemeListFragment extends BaseFragment implements View.OnClickListe
         @SuppressWarnings("deprecation")
         public View getView(int position, View convertView, ViewGroup parent) {
             if (convertView == null) {
-                convertView = LayoutInflater.from(getActivity()).inflate(
+                convertView = LayoutInflater.from(mActivity).inflate(
                         R.layout.theme, parent, false);
             }
             TextView tv_item = (TextView) convertView
@@ -140,12 +135,9 @@ public class ThemeListFragment extends BaseFragment implements View.OnClickListe
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.index:
-                ((MainActivity) mActivity).loadContent();
-                ((MainActivity) mActivity).closeDrawer();
-                break;
-        }
+         mActivity.setTitle("首页");
+        ((MainActivity) mActivity).loadContent();
+        ((MainActivity) mActivity).closeDrawer();
     }
 
 }

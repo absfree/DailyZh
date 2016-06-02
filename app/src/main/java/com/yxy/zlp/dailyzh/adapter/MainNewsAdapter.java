@@ -12,10 +12,9 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.nostra13.universalimageloader.core.DisplayImageOptions;
-import com.nostra13.universalimageloader.core.ImageLoader;
 import com.yxy.zlp.dailyzh.model.Story;
 import com.yxy.zlp.dailyzh.util.Constants;
+import com.yxy.zlp.dailyzh.util.imageLoader.FreeImageLoader;
 import com.yxy.zlp.dailyzhi.R;
 
 import java.util.ArrayList;
@@ -24,19 +23,16 @@ import java.util.List;
 public class MainNewsAdapter extends BaseAdapter {
     private Context mContext;
     private List<Story> mStories;
-    private ImageLoader mImageLoader;
-    private DisplayImageOptions mOptions;
+
+    private FreeImageLoader mFreeImageLoader;
+
     private SharedPreferences mSP;
 
     public MainNewsAdapter(Context context) {
         mContext = context;
         mSP = PreferenceManager.getDefaultSharedPreferences(mContext);
         mStories = new ArrayList<>();
-        mImageLoader = ImageLoader.getInstance();
-        mOptions = new DisplayImageOptions.Builder()
-                .cacheInMemory(true)
-                .cacheOnDisk(true)
-                .build();
+        mFreeImageLoader = FreeImageLoader.getInstance(mContext);
     }
 
     private class ViewHolder {
@@ -64,7 +60,7 @@ public class MainNewsAdapter extends BaseAdapter {
     @Override
     @SuppressWarnings("deprecation")
     public View getView(int position, View convertView, ViewGroup parent) {
-        ViewHolder viewHolder = null;
+        ViewHolder viewHolder;
         if (convertView == null) {
             convertView = LayoutInflater.from(mContext).inflate(R.layout.main_news_item,
                     parent, false);
@@ -90,13 +86,11 @@ public class MainNewsAdapter extends BaseAdapter {
             viewHolder.newsTitle.setVisibility(View.GONE);
             viewHolder.newsTitleIV.setVisibility(View.GONE);
         } else {
-            ((FrameLayout) viewHolder.newsTopic.getParent()).setBackgroundResource(
-                    R.drawable.main_selector);
             viewHolder.newsTopic.setVisibility(View.GONE);
             viewHolder.newsTitle.setVisibility(View.VISIBLE);
             viewHolder.newsTitle.setText(story.getTitle());
             viewHolder.newsTitleIV.setVisibility(View.VISIBLE);
-            mImageLoader.displayImage(story.getImages().get(0), viewHolder.newsTitleIV, mOptions);
+            mFreeImageLoader.displayImage(story.getImages().get(0), viewHolder.newsTitleIV);
         }
         return convertView;
     }

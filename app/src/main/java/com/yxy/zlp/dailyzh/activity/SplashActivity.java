@@ -9,11 +9,10 @@ import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.loopj.android.http.AsyncHttpResponseHandler;
-import com.loopj.android.http.BinaryHttpResponseHandler;
-import com.nostra13.universalimageloader.utils.StorageUtils;
+import com.yxy.zlp.dailyzh.util.httpUtil.AsyncHttpUtils;
 import com.yxy.zlp.dailyzh.util.Constants;
-import com.yxy.zlp.dailyzh.util.HttpUtils;
+import com.yxy.zlp.dailyzh.util.httpUtil.HttpUtils;
+import com.yxy.zlp.dailyzh.util.httpUtil.ResponseHandler;
 import com.yxy.zlp.dailyzhi.R;
 
 import org.json.JSONException;
@@ -22,9 +21,6 @@ import org.json.JSONObject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-
-import cz.msebera.android.httpclient.Header;
 
 public class SplashActivity extends Activity {
     private File appCacheDir;
@@ -33,7 +29,7 @@ public class SplashActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        appCacheDir = StorageUtils.getCacheDirectory(this,false);
+        appCacheDir = getCacheDir();
         setContentView(R.layout.splash);
         ImageView startIV = (ImageView) findViewById(R.id.start);
         initImage(startIV);
@@ -65,21 +61,21 @@ public class SplashActivity extends Activity {
             @Override
             public void onAnimationEnd(Animation animation) {
                 if (HttpUtils.isOnline(SplashActivity.this)) {
-                    HttpUtils.getJson(Constants.START_IMG, new AsyncHttpResponseHandler() {
+                    AsyncHttpUtils.get(Constants.START_IMG, new ResponseHandler() {
                         @Override
-                        public void onSuccess(int i, Header[] headers, byte[] bytes) {
+                        public void onSuccess(byte[] result) {
                             try {
-                                JSONObject jsonObject = new JSONObject(new String(bytes));
+                                JSONObject jsonObject = new JSONObject(new String(result));
                                 String imgUrl = jsonObject.getString("img");
-                                HttpUtils.getImage(imgUrl, new BinaryHttpResponseHandler() {
+                                AsyncHttpUtils.get(imgUrl, new ResponseHandler() {
                                     @Override
-                                    public void onSuccess(int i, Header[] headers, byte[] bytes) {
-                                        saveStartImage(bytes);
+                                    public void onSuccess(byte[] result) {
+                                        saveStartImage(result);
                                         startMainActivity();
                                     }
 
                                     @Override
-                                    public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+                                    public void onFailure() {
                                         startMainActivity();
                                     }
                                 });
@@ -90,7 +86,7 @@ public class SplashActivity extends Activity {
                         }
 
                         @Override
-                        public void onFailure(int i, Header[] headers, byte[] bytes, Throwable throwable) {
+                        public void onFailure() {
                             startMainActivity();
                         }
                     });
@@ -114,8 +110,6 @@ public class SplashActivity extends Activity {
             fos.write(imgBytes);
             fos.flush();
             fos.close();
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }
