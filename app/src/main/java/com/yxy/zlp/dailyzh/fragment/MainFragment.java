@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -75,7 +76,7 @@ public class MainFragment extends BaseFragment {
             @Override
             @SuppressWarnings("deprecation")
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                if (position != 0) {
+                if (position != 1) {
                     Story currentStory = (Story) parent.getAdapter().getItem(position);
                     Intent intent = new Intent(mActivity, NewsContentActivity.class);
                     intent.putExtra(MainFragment.CURRENT_STORY, currentStory);
@@ -87,6 +88,8 @@ public class MainFragment extends BaseFragment {
                     TextView newsTitle = (TextView) view.findViewById(R.id.news_title);
                     newsTitle.setTextColor(getResources().getColor(R.color.read_textcolor));
                     startActivity(intent);
+                } else {
+                    Log.d("TAG", "do nothing.");
                 }
             }
         });
