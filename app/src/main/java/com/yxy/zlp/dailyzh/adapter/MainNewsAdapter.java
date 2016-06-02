@@ -86,6 +86,7 @@ public class MainNewsAdapter extends BaseAdapter {
             viewHolder.newsTitle.setVisibility(View.GONE);
             viewHolder.newsTitleIV.setVisibility(View.GONE);
         } else {
+            ((FrameLayout) viewHolder.newsTopic.getParent()).setBackgroundResource(R.drawable.main_selector);
             viewHolder.newsTopic.setVisibility(View.GONE);
             viewHolder.newsTitle.setVisibility(View.VISIBLE);
             viewHolder.newsTitle.setText(story.getTitle());
