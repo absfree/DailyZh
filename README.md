@@ -59,9 +59,10 @@
     
 ##关于我
 Mail：openmindabs@gmail.com
+
 Blog: http://www.cnblogs.com/absfree/
 
-License
+##License
 
 Copyright 2014 absfree
 
