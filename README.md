@@ -6,7 +6,6 @@
 ##依赖的库
 [Gson](https://github.com/google/gson)
 ##源码结构
-|- dailyzhi
 
   |- activity
   
