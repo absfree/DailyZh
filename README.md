@@ -27,7 +27,7 @@
     
   |- fragment
   
-    |- BaseFragment: 为fragments
+    |- BaseFragment: 为fragments定义了基本的状态与行为
     
     |- MainFragment: 主界面
     
