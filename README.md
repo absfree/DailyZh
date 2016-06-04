@@ -5,6 +5,8 @@
 [DailyZh](http://pan.baidu.com/s/1eS8YqaQ)
 ##依赖的库
 [Gson](https://github.com/google/gson)
+##API
+[知乎日报API](https://github.com/izzyleung/ZhihuDailyPurify/wiki/知乎日报-API-分析)
 ##源码结构
 
   |- activity
