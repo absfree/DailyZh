@@ -1,15 +1,15 @@
 package com.yxy.zlp.dailyzh.model;
 
 public class Theme {
-	private String title;
+	private String name;
 	private String id;
 
-	public String getTitle() {
-		return title;
+	public String getName() {
+		return name;
 	}
 
-	public void setTitle(String title) {
-		this.title = title;
+	public void setName(String title) {
+		this.name = title;
 	}
 
 	public String getId() {
