@@ -16,36 +16,39 @@ import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
+import com.squareup.picasso.Picasso;
 import com.yxy.zlp.dailyzh.fragment.MainFragment;
 import com.yxy.zlp.dailyzh.model.NewsContent;
 import com.yxy.zlp.dailyzh.model.Story;
-import com.yxy.zlp.dailyzh.util.Constants;
-import com.yxy.zlp.dailyzh.util.httpUtil.AsyncHttpUtils;
+import com.yxy.zlp.dailyzh.request.DailyService;
+import com.yxy.zlp.dailyzh.request.RetrofitManager;
 import com.yxy.zlp.dailyzh.util.httpUtil.HttpUtils;
-import com.yxy.zlp.dailyzh.util.httpUtil.ResponseHandler;
-import com.yxy.zlp.dailyzh.util.imageLoader.FreeImageLoader;
 import com.yxy.zlp.dailyzhi.R;
 
-public class NewsContentActivity extends AppCompatActivity {
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+public class NewsContentActivity extends AppCompatActivity {;
     private WebView mWebView;
     private ImageView mImageView;
-    private FreeImageLoader mFreeImageLoader;
     private AppBarLayout mAppBarLayout;
     private Toolbar mToolbar;
     private Story mStory;
     private NewsContent mContent;
     private ShareActionProvider mShareActionProvider;
 
+    private DailyService mService = RetrofitManager.getService();
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.news_content);
-        mFreeImageLoader = FreeImageLoader.getInstance(this);
         mAppBarLayout = (AppBarLayout) findViewById(R.id.app_bar);
         mStory = (Story) getIntent().getSerializableExtra(MainFragment.CURRENT_STORY);
         mImageView = (ImageView) findViewById(R.id.image);
-        mFreeImageLoader.displayImage(mStory.getImages().get(0), mImageView);
+        Picasso.with(this).load(mStory.getImages().get(0)).into(mImageView);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -65,15 +68,17 @@ public class NewsContentActivity extends AppCompatActivity {
         //mWebView.getSettings().setAppCacheEnabled(true);
 
         if (HttpUtils.isOnline(this)) {
-            AsyncHttpUtils.get(Constants.NEWS_CONTENT + mStory.getId(), new ResponseHandler() {
+            Call<NewsContent> newsContent = mService.getNewsContent(mStory.getId());
+
+            newsContent.enqueue(new Callback<NewsContent>() {
                 @Override
-                public void onSuccess(byte[] result) {
-                    String jsonString = new String(result);
-                    parseContentJson(jsonString);
+                public void onResponse(Call<NewsContent> call, Response<NewsContent> response) {
+                    mContent = response.body();
+                    initWebViewContent();
                 }
 
                 @Override
-                public void onFailure() {
+                public void onFailure(Call<NewsContent> call, Throwable t) {
 
                 }
             });
@@ -88,12 +93,6 @@ public class NewsContentActivity extends AppCompatActivity {
         MenuItem menuItem = menu.findItem(R.id.action_share);
         mShareActionProvider = (ShareActionProvider) MenuItemCompat.getActionProvider(menuItem);
         return true;
-    }
-
-    private void parseContentJson(String jsonString) {
-        mContent = (new Gson()).fromJson(jsonString, NewsContent.class);
-
-        initWebViewContent();
     }
 
     @Override
