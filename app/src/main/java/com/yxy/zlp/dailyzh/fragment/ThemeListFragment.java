@@ -13,23 +13,24 @@ import android.widget.Toast;
 
 import com.yxy.zlp.dailyzh.activity.MainActivity;
 import com.yxy.zlp.dailyzh.model.Theme;
-import com.yxy.zlp.dailyzh.util.httpUtil.AsyncHttpUtils;
-import com.yxy.zlp.dailyzh.util.Constants;
+import com.yxy.zlp.dailyzh.model.ThemeList;
+import com.yxy.zlp.dailyzh.request.DailyService;
+import com.yxy.zlp.dailyzh.request.RetrofitManager;
 import com.yxy.zlp.dailyzh.util.httpUtil.HttpUtils;
-import com.yxy.zlp.dailyzh.util.httpUtil.ResponseHandler;
 import com.yxy.zlp.dailyzhi.R;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 
 public class ThemeListFragment extends BaseFragment implements View.OnClickListener {
     private LinearLayout mDrawerLayout;
-    private ListView mThemeList;
+    private ListView lvThemeList;
+    private ThemeList mThemeList;
     private List<Theme> mThemes;
 
     private TextView downloadTV;
@@ -39,20 +40,22 @@ public class ThemeListFragment extends BaseFragment implements View.OnClickListe
 
     private ThemeAdapter mAdapter;
 
+    private DailyService mService = RetrofitManager.getService();
+
     @Override
     protected View initView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.drawer_item_list, container, false);
         mDrawerLayout = (LinearLayout) view.findViewById(R.id.drawer_header_layout);
         indexTV = (TextView) view.findViewById(R.id.index);
         indexTV.setOnClickListener(this);
-        mThemeList = (ListView) view.findViewById(R.id.item_list);
-        mThemeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        lvThemeList = (ListView) view.findViewById(R.id.item_list);
+        lvThemeList.setOnItemClickListener(new AdapterView.OnItemClickListener() {
 
             @Override
             public void onItemClick(AdapterView<?> parent, View view,
                                     int position, long id) {
                 getFragmentManager().beginTransaction().replace(R.id.main_content,
-                        new ThemeFragment(mThemes.get(position).getId(), mThemes.get(position).getTitle()),
+                        new ThemeFragment(mThemes.get(position).getId(), mThemes.get(position).getName()),
                         "theme").commit();
                 ((MainActivity) mActivity).closeDrawer();
             }
@@ -64,40 +67,32 @@ public class ThemeListFragment extends BaseFragment implements View.OnClickListe
     protected void initContent() {
         super.initContent();
         mThemes = new ArrayList<>();
+        Call<ThemeList> themeList = mService.getThemeList();
+        
+
         if (HttpUtils.isOnline(mActivity)) {
-           AsyncHttpUtils.get(Constants.THEME_LIST, new ResponseHandler() {
-               @Override
-               public void onSuccess(byte[] result) {
-                   String jsonString = new String(result);
-                   parseThemesJson(jsonString);
-               }
+            themeList.enqueue(new Callback<ThemeList>() {
+                @Override
+                public void onResponse(Call<ThemeList> call, Response<ThemeList> response) {
+                    mThemeList = response.body();
+                    updateThemeList();
+                }
 
-               @Override
-               public void onFailure() {
+                @Override
+                public void onFailure(Call<ThemeList> call, Throwable t) {
 
-               }
-           });
-
+                }
+            });
         } else {
             Toast.makeText(mActivity, R.string.offline, Toast.LENGTH_SHORT);
         }
     }
 
-    private void parseThemesJson(String jsonString) {
-        try {
-            JSONObject jsonObject = new JSONObject(jsonString);
-            JSONArray themesArray = jsonObject.getJSONArray("others");
-            for (int i = 0; i < themesArray.length(); i++) {
-                Theme theme = new Theme();
-                JSONObject themeObject = themesArray.getJSONObject(i);
-                theme.setTitle(themeObject.getString("name"));
-                theme.setId(themeObject.getString("id"));
-                mThemes.add(theme);
-            }
+    private void updateThemeList() {
+        if (mThemeList != null) {
+            mThemes = mThemeList.getOthers();
             mAdapter = new ThemeAdapter();
-            mThemeList.setAdapter(mAdapter);
-        } catch (JSONException e) {
-            e.printStackTrace();
+            lvThemeList.setAdapter(mAdapter);
         }
     }
 
@@ -128,7 +123,7 @@ public class ThemeListFragment extends BaseFragment implements View.OnClickListe
             TextView tv_item = (TextView) convertView
                     .findViewById(R.id.tv_item);
             tv_item.setTextColor(getResources().getColor(android.R.color.black));
-            tv_item.setText(mThemes.get(position).getTitle());
+            tv_item.setText(mThemes.get(position).getName());
             return convertView;
         }
     }
