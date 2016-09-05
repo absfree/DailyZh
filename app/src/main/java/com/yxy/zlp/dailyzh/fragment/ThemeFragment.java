@@ -15,18 +15,20 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
+import com.squareup.picasso.Picasso;
 import com.yxy.zlp.dailyzh.activity.MainActivity;
 import com.yxy.zlp.dailyzh.activity.NewsContentActivity;
 import com.yxy.zlp.dailyzh.adapter.NewsItemAdapter;
 import com.yxy.zlp.dailyzh.model.Story;
 import com.yxy.zlp.dailyzh.model.ThemeNews;
-import com.yxy.zlp.dailyzh.util.httpUtil.AsyncHttpUtils;
-import com.yxy.zlp.dailyzh.util.Constants;
+import com.yxy.zlp.dailyzh.request.DailyService;
+import com.yxy.zlp.dailyzh.request.RetrofitManager;
 import com.yxy.zlp.dailyzh.util.httpUtil.HttpUtils;
-import com.yxy.zlp.dailyzh.util.httpUtil.ResponseHandler;
-import com.yxy.zlp.dailyzh.util.imageLoader.FreeImageLoader;
 import com.yxy.zlp.dailyzhi.R;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 @SuppressLint("ValidFragment")
 public class ThemeFragment extends BaseFragment {
@@ -34,23 +36,23 @@ public class ThemeFragment extends BaseFragment {
     private ImageView titleIV;
     private TextView titleTV;
     private String themeId;
-    private String themeTitle;
+    private String themeName;
     private ThemeNews news;
     private NewsItemAdapter mAdapter;
-    private FreeImageLoader mFreeImageLoader;
     private SharedPreferences mSP;
 
-    public ThemeFragment(String id, String title) {
+    private DailyService mService = RetrofitManager.getService();
+
+    public ThemeFragment(String id, String name) {
         themeId = id;
-        themeTitle = title;
+        themeName = name;
     }
 
     @Override
     protected View initView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mSP = PreferenceManager.getDefaultSharedPreferences(mActivity);
-        ((MainActivity) mActivity).setToolbarTitle(themeTitle);
+        ((MainActivity) mActivity).setToolbarTitle(themeName);
         View view = inflater.inflate(R.layout.theme_content, container, false);
-        mFreeImageLoader = FreeImageLoader.getInstance(mActivity);
         mNewsList = (ListView) view.findViewById(R.id.news_list);
         View listHeader = LayoutInflater.from(mActivity).inflate(
                 R.layout.theme_content_header, mNewsList, false);
@@ -100,15 +102,17 @@ public class ThemeFragment extends BaseFragment {
     protected void initContent() {
         super.initContent();
         if (HttpUtils.isOnline(mActivity)) {
-            AsyncHttpUtils.get(Constants.THEME + themeId, new ResponseHandler() {
+            Call<ThemeNews> themeNews = mService.getThemeNews(themeId);
+
+            themeNews.enqueue(new Callback<ThemeNews>() {
                 @Override
-                public void onSuccess(byte[] result) {
-                    String jsonString = new String(result);
-                    parseThemeJson(jsonString);
+                public void onResponse(Call<ThemeNews> call, Response<ThemeNews> response) {
+                    news = response.body();
+                    updateThemeNews();
                 }
 
                 @Override
-                public void onFailure() {
+                public void onFailure(Call<ThemeNews> call, Throwable t) {
 
                 }
             });
@@ -117,13 +121,13 @@ public class ThemeFragment extends BaseFragment {
         }
     }
 
-    private void parseThemeJson(String jsonString) {
-        Gson gson = new Gson();
-        news = gson.fromJson(jsonString, ThemeNews.class);
-        titleTV.setText(news.getDescription());
-        mFreeImageLoader.displayImage(news.getImage(), titleIV);
-        mAdapter = new NewsItemAdapter(mActivity, news.getStories());
-        mNewsList.setAdapter(mAdapter);
+    private void updateThemeNews() {
+        if (news != null) {
+            titleTV.setText(news.getDescription());
+            Picasso.with(mActivity).load(news.getImage()).into(titleIV);
+            mAdapter = new NewsItemAdapter(mActivity, news.getStories());
+            mNewsList.setAdapter(mAdapter);
+        }
     }
 
 }
