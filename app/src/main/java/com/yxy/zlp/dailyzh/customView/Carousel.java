@@ -13,8 +13,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
 import com.yxy.zlp.dailyzh.model.LatestNews;
-import com.yxy.zlp.dailyzh.util.imageLoader.FreeImageLoader;
 import com.yxy.zlp.dailyzhi.R;
 
 import java.util.ArrayList;
@@ -27,7 +27,6 @@ public class Carousel extends FrameLayout implements View.OnClickListener {
     private List<View> mViews;
     private List<ImageView> mDotsIV;
     private ViewPager mVP;
-    private FreeImageLoader mFreeImageLoader;
     private boolean isAutoPlay;
     private int currentItem;
     private OnNewsClickListener mOnNewsClickListener;
@@ -51,7 +50,6 @@ public class Carousel extends FrameLayout implements View.OnClickListener {
         mTopStories = new ArrayList<>();
         mViews = new ArrayList<>();
         mDotsIV = new ArrayList<>();
-        mFreeImageLoader = FreeImageLoader.getInstance(mContext);
     }
 
     public void setTopStories(List<LatestNews.TopStory> topStories) {
@@ -82,7 +80,7 @@ public class Carousel extends FrameLayout implements View.OnClickListener {
                     R.layout.carousel_item, null);
             ImageView titleIV = (ImageView) itemView.findViewById(R.id.title_img);
             TextView title = (TextView) itemView.findViewById(R.id.title);
-            mFreeImageLoader.displayImage(mTopStories.get(i).getImage(), titleIV);
+            Picasso.with(mContext).load(mTopStories.get(i).getImage()).into(titleIV);
             title.setText(mTopStories.get(i).getTitle());
             itemView.setOnClickListener(this);
             mViews.add(itemView);
