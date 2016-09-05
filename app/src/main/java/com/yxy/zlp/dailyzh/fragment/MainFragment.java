@@ -15,7 +15,6 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.gson.Gson;
 import com.yxy.zlp.dailyzh.activity.MainActivity;
 import com.yxy.zlp.dailyzh.activity.NewsContentActivity;
 import com.yxy.zlp.dailyzh.adapter.MainNewsAdapter;
@@ -23,10 +22,10 @@ import com.yxy.zlp.dailyzh.customView.Carousel;
 import com.yxy.zlp.dailyzh.model.LatestNews;
 import com.yxy.zlp.dailyzh.model.PrevNews;
 import com.yxy.zlp.dailyzh.model.Story;
-import com.yxy.zlp.dailyzh.util.Constants;
-import com.yxy.zlp.dailyzh.util.httpUtil.AsyncHttpUtils;
+import com.yxy.zlp.dailyzh.request.DailyService;
+import com.yxy.zlp.dailyzh.request.RetrofitManager;
+import com.yxy.zlp.dailyzh.util.Constant;
 import com.yxy.zlp.dailyzh.util.httpUtil.HttpUtils;
-import com.yxy.zlp.dailyzh.util.httpUtil.ResponseHandler;
 import com.yxy.zlp.dailyzhi.R;
 
 import java.text.ParseException;
@@ -34,10 +33,16 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 
 public class MainFragment extends BaseFragment {
-    public static final String TAG = "MainFragment";
+    public static final String TAG = MainFragment.class.getSimpleName();
     public static final String CURRENT_STORY = "currentStory";
+
+    private DailyService mService = RetrofitManager.getService();
 
     private SharedPreferences mSP;
     private ListView mNewsList;
@@ -107,7 +112,7 @@ public class MainFragment extends BaseFragment {
                     ((MainActivity) mActivity).setRefreshEnable(refreshEnable);
                     if ((firstVisibleItem + visibleItemCount == totalItemCount) && (!isLoading)) {
                         //int prevDate = Integer.parseInt(mDate);
-                        loadPrevNews(Constants.PREV_NEWS + mDate);
+                        loadPrevNews(mDate);
                     }
                 }
             }
@@ -119,34 +124,37 @@ public class MainFragment extends BaseFragment {
     @Override
     protected void initContent(){
         isLoading = true;
+
+        Call<LatestNews> latest = mService.getLatest();
         if (HttpUtils.isOnline(mActivity)) {
-            AsyncHttpUtils.get(Constants.LATEST_NEWS, new ResponseHandler() {
+            latest.enqueue(new Callback<LatestNews>() {
                 @Override
-                public void onSuccess(byte[] result) {
-                    String jsonString = new String(result);
-                    parseLatestJson(jsonString);
+                public void onResponse(Call<LatestNews> call, Response<LatestNews> response) {
+                    mLatestNews = response.body();
+                    updateLatestList();
                 }
 
                 @Override
-                public void onFailure() {
-
+                public void onFailure(Call<LatestNews> call, Throwable t) {
+                    Toast.makeText(mActivity, "首页数据加载失败", Toast.LENGTH_SHORT).show();
                 }
             });
         } else {
-            Toast.makeText(mActivity, R.string.offline, Toast.LENGTH_SHORT);
+            Toast.makeText(mActivity, "没有网络连接", Toast.LENGTH_SHORT).show();
         }
+
     }
 
-    private void parseLatestJson(String jsonString) {
-        mLatestNews = (new Gson()).fromJson(jsonString, LatestNews.class);
-        mDate = mLatestNews.getDate();
+    private void updateLatestList() {
+//        mLatestNews = (new Gson()).fromJson(jsonString, LatestNews.class);
+//        mDate = mLatestNews.getDate();
         mCarousel.setTopStories(mLatestNews.getTop_stories());
         mHandler.post(new Runnable() {
             @Override
             public void run() {
                 List<Story> stories = mLatestNews.getStories();
                 Story topic = new Story();
-                topic.setType(Constants.TOPIC);
+                topic.setType(Constant.TOPIC);
                 topic.setTitle("今日热闻");
                 stories.add(0, topic);
                 mMainNewsAdapter.addList(stories);
@@ -155,26 +163,27 @@ public class MainFragment extends BaseFragment {
         });
     }
 
-    private void loadPrevNews(String url) {
+    private void loadPrevNews(String date) {
         isLoading = true;
         if (HttpUtils.isOnline(mActivity)) {
-            AsyncHttpUtils.get(url, new ResponseHandler() {
+            Call<PrevNews> prevNews = mService.getPrev(date);
+
+            prevNews.enqueue(new Callback<PrevNews>() {
                 @Override
-                public void onSuccess(byte[] result) {
-                    String jsonString = new String(result);
-                    parsePrevJson(jsonString);
+                public void onResponse(Call<PrevNews> call, Response<PrevNews> response) {
+                    mPrevNews = response.body();
+                    updatePrevList();
                 }
 
                 @Override
-                public void onFailure() {
+                public void onFailure(Call<PrevNews> call, Throwable t) {
 
                 }
             });
         }
     }
 
-    private void parsePrevJson(String jsonString) {
-        mPrevNews = (new Gson()).fromJson(jsonString, PrevNews.class);
+    private void updatePrevList() {
         if (mPrevNews != null) {
             mDate = mPrevNews.getDate();
             mHandler.post(new Runnable() {
@@ -182,7 +191,7 @@ public class MainFragment extends BaseFragment {
                 public void run() {
                     List<Story> stories = mPrevNews.getStories();
                     Story topic = new Story();
-                    topic.setType(Constants.TOPIC);
+                    topic.setType(Constant.TOPIC);
                     topic.setTitle(formatDate(mDate));
                     stories.add(0, topic);
                     mMainNewsAdapter.addList(stories);
