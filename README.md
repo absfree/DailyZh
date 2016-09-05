@@ -2,9 +2,10 @@
 ##效果预览
 ![](https://github.com/absfree/DailyZh/blob/master/demo/demo.gif)  
 ##apk下载
-[DailyZh](http://pan.baidu.com/s/1eS8YqaQ)
+[DailyZh](http://pan.baidu.com/s/1c1B9jfM)
 ##依赖的库
-[Gson](https://github.com/google/gson)
+[Retrofit](https://github.com/square/retrofit)
+[Picasso](https://github.com/square/picasso)
 ##API
 [知乎日报API](https://github.com/izzyleung/ZhihuDailyPurify/wiki/知乎日报-API-分析)
 ##源码结构
@@ -55,9 +56,13 @@
   
     |- imageLoader: 自定义图片加载缓存库
     
-    |- httpUtil: 自定义网络请求库
+    |- HttpUtils: 网络先关便利方法
     
-    |- Constants
+    |- Constant: 请求URL常量
+    
+    |- DailyService: 定义了请求接口
+    
+    |- RetrofitManager: 保存全局DailySerivce实例
     
 ##关于我
 Mail：openmindabs@gmail.com
