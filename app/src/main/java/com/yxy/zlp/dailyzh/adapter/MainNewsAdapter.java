@@ -12,25 +12,32 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
 import com.yxy.zlp.dailyzh.model.Story;
-import com.yxy.zlp.dailyzh.util.imageLoader.FreeImageLoader;
+import com.yxy.zlp.dailyzh.util.Constant;
 import com.yxy.zlp.dailyzhi.R;
 
+import java.util.ArrayList;
 import java.util.List;
 
-public class NewsItemAdapter extends BaseAdapter {
-    private List<Story> mStories;
+public class MainNewsAdapter extends BaseAdapter {
     private Context mContext;
+    private List<Story> mStories;
+
     private SharedPreferences mSP;
 
-    private FreeImageLoader mFreeImageLoader;
-
-    public NewsItemAdapter(Context context, List<Story> items) {
+    public MainNewsAdapter(Context context) {
         mContext = context;
-        mStories = items;
-        mFreeImageLoader = FreeImageLoader.getInstance(mContext);
         mSP = PreferenceManager.getDefaultSharedPreferences(mContext);
+        mStories = new ArrayList<>();
     }
+
+    private class ViewHolder {
+        TextView newsTopic;
+        TextView newsTitle;
+        ImageView newsTitleIV;
+    }
+
 
     @Override
     public int getCount() {
@@ -52,45 +59,42 @@ public class NewsItemAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         ViewHolder viewHolder;
         if (convertView == null) {
+            convertView = LayoutInflater.from(mContext).inflate(R.layout.main_news_item,
+                    parent, false);
             viewHolder = new ViewHolder();
-            convertView = LayoutInflater.from(mContext).inflate(R.layout.theme_news_item, parent, false);
-            viewHolder.title = (TextView) convertView.findViewById(R.id.title);
-            viewHolder.titleIV = (ImageView) convertView.findViewById(R.id.titleIV);
-            viewHolder.themeTopic = (TextView) convertView.findViewById(R.id.theme_topic);
+            viewHolder.newsTopic = (TextView) convertView.findViewById(R.id.news_topic);
+            viewHolder.newsTitle = (TextView) convertView.findViewById(R.id.news_title);
+            viewHolder.newsTitleIV = (ImageView) convertView.findViewById(R.id.news_title_img);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
         String newsRead = mSP.getString("newsRead", "");
         if (newsRead.contains(mStories.get(position).getId() + "")) {
-            viewHolder.title.setTextColor(mContext.getResources().getColor(R.color.read_textcolor));
+            viewHolder.newsTitle.setTextColor(mContext.getResources().getColor(R.color.read_textcolor));
         } else {
-            viewHolder.title.setTextColor(mContext.getResources().getColor(android.R.color.black));
+            viewHolder.newsTitle.setTextColor(Color.BLACK);
         }
         Story story = mStories.get(position);
-        if (position == 0) {
-            ((FrameLayout) viewHolder.themeTopic.getParent()).setBackgroundColor(Color.TRANSPARENT);
-            viewHolder.themeTopic.setVisibility(View.VISIBLE);
-            viewHolder.themeTopic.setText(story.getTitle());
-            viewHolder.title.setVisibility(View.GONE);
-            viewHolder.titleIV.setVisibility(View.GONE);
+        if (story.getType() == Constant.TOPIC) {
+            ((FrameLayout) viewHolder.newsTopic.getParent()).setBackgroundColor(Color.TRANSPARENT);
+            viewHolder.newsTopic.setVisibility(View.VISIBLE);
+            viewHolder.newsTopic.setText(story.getTitle());
+            viewHolder.newsTitle.setVisibility(View.GONE);
+            viewHolder.newsTitleIV.setVisibility(View.GONE);
         } else {
-            ((FrameLayout) viewHolder.themeTopic.getParent()).setBackgroundResource(R.drawable.main_selector);
-            viewHolder.themeTopic.setVisibility(View.GONE);
-            viewHolder.title.setVisibility(View.VISIBLE);
-            viewHolder.title.setText(story.getTitle());
-            if (story.getImages() != null) {
-                viewHolder.titleIV.setVisibility(View.VISIBLE);
-                mFreeImageLoader.displayImage(story.getImages().get(0), viewHolder.titleIV);
-            }
+            ((FrameLayout) viewHolder.newsTopic.getParent()).setBackgroundResource(R.drawable.main_selector);
+            viewHolder.newsTopic.setVisibility(View.GONE);
+            viewHolder.newsTitle.setVisibility(View.VISIBLE);
+            viewHolder.newsTitle.setText(story.getTitle());
+            viewHolder.newsTitleIV.setVisibility(View.VISIBLE);
+            Picasso.with(mContext).load(story.getImages().get(0)).into(viewHolder.newsTitleIV);
         }
         return convertView;
     }
 
-    public static class ViewHolder {
-        TextView themeTopic;
-        TextView title;
-        ImageView titleIV;
+    public void addList(List<Story> stories) {
+        this.mStories.addAll(stories);
+        notifyDataSetChanged();
     }
-
 }
