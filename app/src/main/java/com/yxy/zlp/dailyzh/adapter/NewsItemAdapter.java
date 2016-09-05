@@ -12,8 +12,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
 import com.yxy.zlp.dailyzh.model.Story;
-import com.yxy.zlp.dailyzh.util.imageLoader.FreeImageLoader;
 import com.yxy.zlp.dailyzhi.R;
 
 import java.util.List;
@@ -23,12 +23,9 @@ public class NewsItemAdapter extends BaseAdapter {
     private Context mContext;
     private SharedPreferences mSP;
 
-    private FreeImageLoader mFreeImageLoader;
-
     public NewsItemAdapter(Context context, List<Story> items) {
         mContext = context;
         mStories = items;
-        mFreeImageLoader = FreeImageLoader.getInstance(mContext);
         mSP = PreferenceManager.getDefaultSharedPreferences(mContext);
     }
 
@@ -75,12 +72,13 @@ public class NewsItemAdapter extends BaseAdapter {
             viewHolder.title.setVisibility(View.GONE);
             viewHolder.titleIV.setVisibility(View.GONE);
         } else {
+            ((FrameLayout) viewHolder.themeTopic.getParent()).setBackgroundResource(R.drawable.main_selector);
             viewHolder.themeTopic.setVisibility(View.GONE);
             viewHolder.title.setVisibility(View.VISIBLE);
             viewHolder.title.setText(story.getTitle());
             if (story.getImages() != null) {
                 viewHolder.titleIV.setVisibility(View.VISIBLE);
-                mFreeImageLoader.displayImage(story.getImages().get(0), viewHolder.titleIV);
+                Picasso.with(mContext).load(story.getImages().get(0)).into(viewHolder.titleIV);
             }
         }
         return convertView;
