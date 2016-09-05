@@ -5,6 +5,7 @@
 [DailyZh](http://pan.baidu.com/s/1c1B9jfM)
 ##依赖的库
 [Retrofit](https://github.com/square/retrofit)
+
 [Picasso](https://github.com/square/picasso)
 ##API
 [知乎日报API](https://github.com/izzyleung/ZhihuDailyPurify/wiki/知乎日报-API-分析)
@@ -56,7 +57,7 @@
   
     |- imageLoader: 自定义图片加载缓存库
     
-    |- HttpUtils: 网络先关便利方法
+    |- HttpUtils: 网络相关便利方法
     
     |- Constant: 请求URL常量
     
