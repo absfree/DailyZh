@@ -9,18 +9,10 @@ import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.yxy.zlp.dailyzh.util.httpUtil.AsyncHttpUtils;
-import com.yxy.zlp.dailyzh.util.Constants;
 import com.yxy.zlp.dailyzh.util.httpUtil.HttpUtils;
-import com.yxy.zlp.dailyzh.util.httpUtil.ResponseHandler;
 import com.yxy.zlp.dailyzhi.R;
 
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 public class SplashActivity extends Activity {
     private File appCacheDir;
@@ -60,40 +52,10 @@ public class SplashActivity extends Activity {
 
             @Override
             public void onAnimationEnd(Animation animation) {
-                if (HttpUtils.isOnline(SplashActivity.this)) {
-                    AsyncHttpUtils.get(Constants.START_IMG, new ResponseHandler() {
-                        @Override
-                        public void onSuccess(byte[] result) {
-                            try {
-                                JSONObject jsonObject = new JSONObject(new String(result));
-                                String imgUrl = jsonObject.getString("img");
-                                AsyncHttpUtils.get(imgUrl, new ResponseHandler() {
-                                    @Override
-                                    public void onSuccess(byte[] result) {
-                                        saveStartImage(result);
-                                        startMainActivity();
-                                    }
-
-                                    @Override
-                                    public void onFailure() {
-                                        startMainActivity();
-                                    }
-                                });
-
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        @Override
-                        public void onFailure() {
-                            startMainActivity();
-                        }
-                    });
-                } else {
+                if (!HttpUtils.isOnline(SplashActivity.this)) {
                     Toast.makeText(SplashActivity.this, R.string.offline, Toast.LENGTH_SHORT);
-                    startMainActivity();
                 }
+                startMainActivity();
             }
 
             @Override
@@ -102,17 +64,6 @@ public class SplashActivity extends Activity {
             }
         });
         imageView.startAnimation(scaleAnim);
-    }
-
-    private void saveStartImage(byte[] imgBytes) {
-        try {
-            FileOutputStream fos = new FileOutputStream(imgFile);
-            fos.write(imgBytes);
-            fos.flush();
-            fos.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     private void startMainActivity() {
